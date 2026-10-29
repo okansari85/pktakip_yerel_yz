@@ -67,11 +67,18 @@ if defined backend (
         echo   "!backend!\.env" bulunamadi, .env'e yazilmadi.
     )
 )
+rem Adres: varsayilan yalniz bu makine; .env'de BIND=0.0.0.0 ise agdaki adres (uygulama baska makinedeyse).
+set host=127.0.0.1
+if exist .env for /f "usebackq tokens=1,* delims==" %%a in (".env") do if /i "%%a"=="BIND" set host=%%b
+if "!host!"=="0.0.0.0" for /f "usebackq delims=" %%i in (`powershell -NoProfile -Command "(Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -notmatch '^(127|169\.254)\.' -and $_.InterfaceAlias -notmatch 'vEthernet|WSL|Loopback' } | Select-Object -First 1).IPAddress"`) do set host=%%i
 echo.
-echo   Son adim, PKTakip ^> Ayarlar ^> Yapay zeka:
-echo     Saglayici: Yerel sunucu
-echo     Okuma yontemi: Cok ajanli ^(Docling^)
-echo     Sunucu adresi: http://127.0.0.1:8090/v1
+echo   ================= SUNUCU ADRESLERI =================
+echo   Model    http://!host!:8090/v1   ^(Yapay zeka sayfasi: Sunucu adresi^)
+echo   Okuyucu  http://!host!:8091/v1   ^(.env PKTAKIP_LOCAL_READER_URL^)
+echo   Docling  http://!host!:8092/     ^(.env PKTAKIP_DOCLING_URL^)
+echo   ====================================================
+echo.
+echo   PKTakip ^> Yapay zeka sayfasi: Saglayici "Yerel sunucu", Okuma yontemi "Cok ajanli (Docling)", Sunucu adresi yukaridaki Model.
 
 :son
 echo.

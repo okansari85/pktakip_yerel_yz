@@ -29,7 +29,8 @@ Uygulamanın kendisi (backend, önyüz) bu depoda değil.
 - Güncel sürümü çeker (`git pull`).
 - Servisleri kurar ve açar.
 - Modeller yüklenene kadar bekler.
-- PKTakip backend klasörünü bir kez sorar ve `.env`'e adresleri yazar. Eski dosya `.env.yedek` olarak saklanır; klasör `pktakip-backend.txt`'ye kaydedilir.
+- PKTakip backend klasörünü bir kez sorar ve `.env`'e adresleri yazar. Eski dosya `.env.yedek` olarak saklanır; klasör `pktakip-backend.txt`'ye kaydedilir. Boş bırakılırsa atlanır.
+- En sonda üç sunucu adresini (model, okuyucu, Docling) ekrana yazar. `BIND=0.0.0.0` ise adresler makinenin ağ adresiyle yazılır.
 
 Güncellemek için de `kur.bat`'ı yeniden çalıştırmak yeter.
 
