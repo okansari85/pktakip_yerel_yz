@@ -1,0 +1,58 @@
+# PKTakip yerel yapay zeka: NuExtract3 (8090), Qwen3.5-4B sayfa okuyucu (8091), Docling (8092). `docker compose up -d`.
+# llama.cpp testlerdeki sürümden (b11840) derlenir: bu sürümün hazır imajı yayınlanmadı, başka sürüm cevapları değiştirebilir.
+name: pktakip-yz
+
+x-llama: &llama
+  build:
+    context: https://github.com/ggml-org/llama.cpp.git#b11840
+    dockerfile: .devops/cuda.Dockerfile
+    target: server
+  image: pktakip-llama:b11840
+  restart: unless-stopped
+  volumes:
+    - ./models:/models:ro
+  depends_on:
+    indir:
+      condition: service_completed_successfully
+  deploy:
+    resources:
+      reservations:
+        devices:
+          - driver: nvidia
+            count: all
+            capabilities: [gpu]
+
+services:
+  # Modeller ilk açılışta bir kez iner (~5,5 GB); varsa atlanır.
+  indir:
+    image: curlimages/curl:8.11.1
+    user: "0"
+    volumes:
+      - ./models:/models
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        set -e
+        get() { [ -s "/models/$$1" ] || { echo "$$1 iniyor"; curl -fL --retry 5 -o "/models/$$1.part" "$$2" && mv "/models/$$1.part" "/models/$$1"; }; }
+        get NuExtract3-Q4_K_M.gguf https://huggingface.co/numind/NuExtract3-GGUF/resolve/main/NuExtract3-Q4_K_M.gguf
+        get Qwen3.5-4B-Q4_K_M.gguf https://huggingface.co/unsloth/Qwen3.5-4B-GGUF/resolve/main/Qwen3.5-4B-Q4_K_M.gguf
+        echo modeller hazir
+
+  model:
+    <<: *llama
+    ports:
+      - "${BIND:-127.0.0.1}:8090:8080"
+    command: ["-m", "/models/NuExtract3-Q4_K_M.gguf", "-ngl", "99", "-c", "16384", "-np", "1", "--port", "8080", "--jinja", "--chat-template-kwargs", "{\"enable_thinking\":false}"]
+
+  okuyucu:
+    <<: *llama
+    ports:
+      - "${BIND:-127.0.0.1}:8091:8080"
+    command: ["-m", "/models/Qwen3.5-4B-Q4_K_M.gguf", "-ngl", "99", "-c", "12288", "-np", "1", "--port", "8080", "--jinja", "--chat-template-kwargs", "{\"enable_thinking\":false}"]
+
+  docling:
+    build: ./docling
+    image: pktakip-docling:2.142.1
+    restart: unless-stopped
+    ports:
+      - "${BIND:-127.0.0.1}:8092:8092"
