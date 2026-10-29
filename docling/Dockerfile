@@ -9,7 +9,7 @@ RUN pip install --no-cache-dir --extra-index-url https://download.pytorch.org/wh
 ENV DOCLING_ARTIFACTS_PATH=/opt/docling-models
 RUN docling-tools models download -o /opt/docling-models
 
-# shortcut: pk_docling.py backend deposundaki scripts/pk_docling.py'nin kopyası; orada değişirse buraya kopyalanıp imaj yeniden derlenir.
-COPY pk_docling.py /app/pk_docling.py
+# Betik backend deposundan (main): kopya tutulmaz; backend'de değişince `kur.bat` imajı yeniden derler.
+ADD https://raw.githubusercontent.com/okansari85/taseron_managment/main/scripts/pk_docling.py /app/pk_docling.py
 EXPOSE 8092
 CMD ["python", "/app/pk_docling.py", "--serve", "8092", "0.0.0.0"]
